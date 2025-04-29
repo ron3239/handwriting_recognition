@@ -1,1 +1,5 @@
 /.venv
+.gitignore
+.mnist_data.csv
+.app_settings.json
+.users.json
