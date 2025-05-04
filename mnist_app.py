@@ -554,7 +554,7 @@ class MNISTApp:
         """Диалог авторизации"""
         dialog = tk.Toplevel(self.root)
         dialog.title("Авторизация")
-        dialog.geometry("300x200")
+        dialog.geometry("300x300")
         dialog.resizable(False, False)
         
         ttk.Label(dialog, text="Логин:").pack(pady=5)
@@ -706,52 +706,71 @@ class MNISTApp:
     def apply_theme(self):
         """Применение выбранной темы"""
         try:
+            style = ttk.Style()
+            
             if self.current_theme == "dark":
                 bg = "#2d2d2d"
                 fg = "#ffffff"
                 widget_bg = "#3d3d3d"
                 widget_fg = "#ffffff"
+                style.theme_use('alt')  # Используем тему, которая лучше подходит для темного режима
             else:
                 bg = "#f0f0f0"
                 fg = "#000000"
                 widget_bg = "#ffffff"
                 widget_fg = "#000000"
+                style.theme_use('clam')  # Светлая тема
             
-            # Настройка стилей для ttk виджетов
-            style = ttk.Style()
-            style.configure(".", background=bg, foreground=fg)
-            style.configure("TFrame", background=bg)
-            style.configure("TLabel", background=bg, foreground=fg)
-            style.configure("TButton", background=widget_bg, foreground=fg)
-            style.configure("TEntry", background=widget_bg, foreground=fg)
+            # Настройка стилей для ttk-виджетов
+            style.configure('.', background=bg, foreground=fg)
+            style.configure('TFrame', background=bg)
+            style.configure('TLabel', background=bg, foreground=fg)
+            style.configure('TButton', background=widget_bg, foreground=fg)
+            
+            style.configure('TEntry', fieldbackground=widget_bg, foreground=fg)
+            style.configure('TCombobox', fieldbackground=widget_bg, foreground=fg)
+            style.configure('Treeview', background=widget_bg, foreground=fg, fieldbackground=widget_bg)
+            style.map('Treeview', background=[('selected', '#347083')])
             
             # Применяем цвета к основным виджетам
             self.root.config(bg=bg)
             
+            # Рекурсивно применяем тему ко всем виджетам
             for widget in self.root.winfo_children():
                 self.apply_theme_to_widget(widget, bg, fg, widget_bg, widget_fg)
+                
         except Exception as e:
             print(f"Ошибка применения темы: {str(e)}")
     
     def apply_theme_to_widget(self, widget, bg, fg, widget_bg, widget_fg):
         """Рекурсивное применение темы к виджетам"""
         try:
-            if isinstance(widget, (ttk.Frame, ttk.LabelFrame, ttk.PanedWindow)):
-                pass  # ttk виджеты используют стили
+            # Пропускаем ttk-виджеты (они используют стили)
+            if isinstance(widget, ttk.Widget):
+                return
+                
+            # Обрабатываем стандартные tkinter-виджеты
+            if isinstance(widget, (tk.Menu, tk.Toplevel)):
+                widget.config(bg=bg, fg=fg)
+                
             elif isinstance(widget, (tk.Frame, tk.LabelFrame, tk.Canvas)):
                 widget.config(bg=bg)
+                
             elif isinstance(widget, (tk.Label, tk.Button, tk.Entry)):
                 widget.config(bg=widget_bg, fg=fg)
-            elif isinstance(widget, (tk.Text, tk.Scrollbar)):
-                widget.config(bg=widget_bg)
-                if isinstance(widget, tk.Text):
-                    widget.config(fg=fg, insertbackground=fg)
-            
+                
+            elif isinstance(widget, (tk.Text, ScrolledText)):
+                widget.config(bg=widget_bg, fg=fg, insertbackground=fg)
+                
+            elif isinstance(widget, tk.Scrollbar):
+                widget.config(bg=widget_bg, troughcolor=bg)
+                
+            # Применяем к дочерним виджетам
             for child in widget.winfo_children():
                 self.apply_theme_to_widget(child, bg, fg, widget_bg, widget_fg)
+                
         except Exception as e:
             print(f"Ошибка применения темы к {widget}: {str(e)}")
-            pass
     
     def load_settings(self):
         """Загрузка настроек из файла"""
