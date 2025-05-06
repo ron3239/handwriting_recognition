@@ -709,11 +709,34 @@ class MNISTApp:
             style = ttk.Style()
             
             if self.current_theme == "dark":
+                # Цвета для темной темы
                 bg = "#2d2d2d"
                 fg = "#ffffff"
                 widget_bg = "#3d3d3d"
                 widget_fg = "#ffffff"
-                style.theme_use('alt')  # Используем тему, которая лучше подходит для темного режима
+                select_bg = "#4a6987"
+                select_fg = "#ffffff"
+                hover_bg = "#505050"
+                pressed_bg = "#404040"
+                border_color = "#5a5a5a"
+                style.theme_use('alt')
+                
+                # Настройка стилей для кнопок
+                style.configure('TButton', 
+                            background=widget_bg,
+                            foreground=fg,
+                            bordercolor=border_color,
+                            borderwidth=1,
+                            relief="raised",
+                            padding=6,
+                            font=('Arial', 10))
+                
+                style.map('TButton',
+                        background=[('active', hover_bg), ('pressed', pressed_bg)],
+                        relief=[('pressed', 'sunken'), ('!pressed', 'raised')],
+                        bordercolor=[('active', '#707070')],
+                        lightcolor=[('pressed', pressed_bg), ('!pressed', hover_bg)],
+                        darkcolor=[('pressed', pressed_bg), ('!pressed', hover_bg)])
             else:
                 bg = "#f0f0f0"
                 fg = "#000000"
