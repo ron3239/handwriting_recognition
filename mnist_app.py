@@ -107,7 +107,7 @@ class MNISTApp:
             messagebox.showwarning("Предупреждение", "Сначала авторизуйтесь")
             self.status_bar.config(text="Требуется авторизация")
             return
-                
+                    
         # Проверка загруженного изображения
         if not hasattr(self, 'image'):
             messagebox.showwarning("Предупреждение", "Сначала загрузите изображение")
@@ -139,18 +139,18 @@ class MNISTApp:
             plt.axis('off')
             
             # ===== 3. Выполнение предсказания =====
-            predictions = self.model.predict(img_array, verbose=0)
+            predictions = self.model.predict(img_array, verbose=0)[0]  # Берем первый (и единственный) элемент
             digit = np.argmax(predictions)
             confidence = np.max(predictions)
             
             # ===== 4. Анализ результатов =====
             print("\nРезультаты предсказания:")
-            print("Все вероятности:", [f"{p:.4f}" for p in predictions[0]])
+            print("Все вероятности:", [f"{p:.4f}" for p in predictions])
             print(f"Предсказанная цифра: {digit} (уверенность: {confidence:.2%})")
             
             # Визуализация вероятностей
             plt.subplot(1, 2, 2)
-            bars = plt.bar(range(10), predictions[0], color='skyblue')
+            bars = plt.bar(range(10), predictions, color='skyblue')
             bars[digit].set_color('orange')
             plt.title("Вероятности цифр")
             plt.xlabel("Цифра")
@@ -162,7 +162,7 @@ class MNISTApp:
             
             # ===== 5. Обновление интерфейса =====
             self.result_label.config(text=f"Результат: {digit} (уверенность: {confidence:.1%})")
-            self.update_probability_plot(predictions[0])
+            self.update_probability_plot(predictions)  # Передаем все 10 вероятностей
             
             # Сохранение в историю
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -394,17 +394,39 @@ class MNISTApp:
     
     
     def update_probability_plot(self, probabilities):
-        """Обновление графика вероятностей"""
+        """Обновление графика вероятностей для всех цифр 0-9"""
         self.ax.clear()
-        bars = self.ax.bar(range(10), probabilities, color='skyblue')
-        bars[np.argmax(probabilities)].set_color('orange')
         
-        self.ax.set_title("Вероятности цифр")
-        self.ax.set_xlabel("Цифра")
-        self.ax.set_ylabel("Вероятность")
+        # Создаем список цветов - оранжевый для максимальной вероятности, голубой для остальных
+        colors = ['skyblue'] * 10
+        predicted_digit = np.argmax(probabilities)
+        colors[predicted_digit] = 'orange'
+        
+        # Создаем столбчатую диаграмму
+        bars = self.ax.bar(range(10), probabilities, color=colors, edgecolor='white', linewidth=1)
+        
+        # Добавляем значения вероятностей над столбцами
+        for i, bar in enumerate(bars):
+            height = bar.get_height()
+            self.ax.text(bar.get_x() + bar.get_width()/2., height,
+                        f'{height:.1%}',
+                        ha='center', va='bottom', fontsize=9)
+        
+        # Настраиваем внешний вид графика
+        self.ax.set_title("Вероятности цифр", fontsize=12, pad=10)
+        self.ax.set_xlabel("Цифра", fontsize=10)
+        self.ax.set_ylabel("Вероятность", fontsize=10)
         self.ax.set_xticks(range(10))
-        self.ax.set_ylim(0, 1)
+        self.ax.set_ylim(0, 1.1)  # Оставляем место для текста над столбцами
         
+        # Добавляем сетку для лучшей читаемости
+        self.ax.yaxis.grid(True, linestyle='--', alpha=0.7)
+        
+        # Убираем верхнюю и правую границы
+        self.ax.spines['top'].set_visible(False)
+        self.ax.spines['right'].set_visible(False)
+        
+        # Обновляем холст
         self.canvas_fig.draw()
     
     def update_history(self):
